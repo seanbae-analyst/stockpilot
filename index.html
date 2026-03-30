@@ -6,6 +6,7 @@
 <title>StockPilot — AI Portfolio Analyzer</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --bg: #0c0f13;
@@ -248,9 +249,49 @@ input[type=range]{width:100%;accent-color:var(--accent);}
 .mobile-nav{display:none;position:fixed;inset:0;background:var(--surface);z-index:150;padding:20px;overflow-y:auto;}
 .mobile-nav.open{display:block;}
 .mobile-nav-close{background:none;border:none;color:var(--text);font-size:24px;cursor:pointer;margin-bottom:20px;}
+
+/* LOGIN SCREEN */
+.login-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:300;align-items:center;justify-content:center;flex-direction:column;}
+.login-screen.show{display:flex;}
+.login-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:48px 40px;width:100%;max-width:420px;text-align:center;margin:20px;}
+.login-logo{width:56px;height:56px;background:linear-gradient(135deg,#4f9eff,#a78bfa);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px;}
+.login-title{font-size:24px;font-weight:600;margin-bottom:8px;}
+.login-desc{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:28px;}
+.login-features{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;text-align:left;}
+.login-feature{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);}
+.login-feature-icon{font-size:16px;}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;background:#fff;border:none;border-radius:10px;font-size:15px;font-weight:500;color:#1a1a1a;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity 0.2s;}
+.google-btn:hover{opacity:0.9;}
+.login-disclaimer{font-size:11px;color:var(--muted);line-height:1.6;margin-top:16px;}
+.user-info{display:flex;align-items:center;gap:8px;}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#4f9eff,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;}
+.user-name{font-size:12px;color:var(--muted);}
+.sign-out-btn{font-size:11px;padding:4px 10px;background:none;border:1px solid var(--border2);border-radius:6px;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;}
+.sign-out-btn:hover{color:var(--red);border-color:rgba(239,68,68,0.3);}
+
 </style>
 </head>
 <body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen show" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">📈</div>
+    <div class="login-title">Welcome to StockPilot</div>
+    <div class="login-desc">Your AI-powered portfolio analyzer. Sign in to track your investments and get personalized AI insights.</div>
+    <div class="login-features">
+      <div class="login-feature"><span class="login-feature-icon">🤖</span>AI analysis for every stock you own</div>
+      <div class="login-feature"><span class="login-feature-icon">📊</span>Real-time portfolio tracking</div>
+      <div class="login-feature"><span class="login-feature-icon">🔒</span>Your data is private and secure</div>
+      <div class="login-feature"><span class="login-feature-icon">📱</span>Access from any device</div>
+    </div>
+    <button class="google-btn" onclick="signInWithGoogle()">
+      <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </button>
+    <div class="login-disclaimer">⚠️ StockPilot provides AI analysis for educational purposes only. Not financial advice. By signing in you agree to use this tool responsibly.</div>
+  </div>
+</div>
 
 <header>
   <div style="display:flex;align-items:center;gap:8px;">
@@ -265,6 +306,11 @@ input[type=range]{width:100%;accent-color:var(--accent);}
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <span class="badge-live">Auto-updates 5AM KST</span>
+    <div class="user-info" id="user-info" style="display:none;">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <span class="user-name" id="user-name"></span>
+      <button class="sign-out-btn" onclick="signOut()">Sign out</button>
+    </div>
   </div>
 </header>
 
@@ -851,9 +897,132 @@ input[type=range]{width:100%;accent-color:var(--accent);}
 
 <script>
 // ═══════════════════════════════════════════════════════
+// SUPABASE AUTH
+// ═══════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://ynpyhxeflkihmnmfexre.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlucHloeGVmbGtpaG1ubWZleHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NzAwOTksImV4cCI6MjA5MDM0NjA5OX0.FncCLgmPzWUFPvLTyZ_eXNIdn1h6EJr17xQMdb1dphk';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+
+async function initAuth() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user) {
+    await setUser(session.user);
+  } else {
+    showLoginScreen();
+  }
+
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session?.user) {
+      await setUser(session.user);
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      positions = [];
+      showLoginScreen();
+    }
+  });
+}
+
+async function setUser(user) {
+  currentUser = user;
+  const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+  const initials = name.charAt(0).toUpperCase();
+
+  document.getElementById('user-avatar').textContent = initials;
+  document.getElementById('user-name').textContent = name;
+  document.getElementById('user-info').style.display = 'flex';
+  document.getElementById('login-screen').classList.remove('show');
+
+  await loadPositionsFromDB();
+  renderDashboard();
+}
+
+async function signInWithGoogle() {
+  await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin }
+  });
+}
+
+async function signOut() {
+  await supabase.auth.signOut();
+  positions = [];
+  renderDashboard();
+}
+
+function showLoginScreen() {
+  document.getElementById('login-screen').classList.add('show');
+  document.getElementById('user-info').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════
+// DB FUNCTIONS
+// ═══════════════════════════════════════════════════════
+async function loadPositionsFromDB() {
+  if (!currentUser) return;
+  const { data, error } = await supabase
+    .from('user_portfolios')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: true });
+  if (!error && data) {
+    positions = data.map(row => ({
+      id: row.id,
+      ticker: row.ticker,
+      name: row.name || row.ticker,
+      sector: row.sector || 'Unknown',
+      avgPrice: parseFloat(row.avg_price),
+      shares: parseFloat(row.shares),
+      date: row.purchase_date,
+      notes: row.notes || '',
+      currentPrice: parseFloat(row.current_price || row.avg_price),
+      signal: row.signal || 'pending',
+      signalReason: row.signal_reason || '',
+      lastUpdated: row.last_updated
+    }));
+  }
+}
+
+async function savePositionToDB(pos) {
+  if (!currentUser) return;
+  const { data, error } = await supabase.from('user_portfolios').insert({
+    user_id: currentUser.id,
+    ticker: pos.ticker,
+    name: pos.name,
+    sector: pos.sector,
+    avg_price: pos.avgPrice,
+    shares: pos.shares,
+    purchase_date: pos.date,
+    notes: pos.notes,
+    current_price: pos.currentPrice,
+    signal: pos.signal,
+    signal_reason: pos.signalReason || ''
+  }).select().single();
+  if (!error && data) pos.id = data.id;
+}
+
+async function updatePositionInDB(pos) {
+  if (!currentUser || !pos.id) return;
+  await supabase.from('user_portfolios').update({
+    current_price: pos.currentPrice,
+    signal: pos.signal,
+    signal_reason: pos.signalReason || '',
+    last_updated: new Date().toISOString()
+  }).eq('id', pos.id).eq('user_id', currentUser.id);
+}
+
+async function deletePositionFromDB(id) {
+  if (!currentUser || !id) return;
+  await supabase.from('user_portfolios').delete()
+    .eq('id', id).eq('user_id', currentUser.id);
+}
+
+// ═══════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════
-let positions = JSON.parse(localStorage.getItem('sp_positions') || '[]');
+let positions = [];
 let currentTicker = null;
 
 const AI_SYSTEM = `You are a knowledgeable financial analyst who explains things in simple, clear English that beginners can understand. 
@@ -883,10 +1052,10 @@ function closeMobileNav() {
 document.addEventListener('DOMContentLoaded', () => {
   const mobileItems = document.getElementById('mobile-nav-items');
   mobileItems.innerHTML = document.getElementById('sidebar').innerHTML;
-  renderDashboard();
   renderGlossary();
   calcDCA();
   calcTax();
+  initAuth(); // Initialize Supabase auth
 });
 
 // ═══════════════════════════════════════════════════════
@@ -909,9 +1078,10 @@ async function callClaude(userMsg, system) {
 // ═══════════════════════════════════════════════════════
 // POSITIONS
 // ═══════════════════════════════════════════════════════
-function savePositions() { localStorage.setItem('sp_positions', JSON.stringify(positions)); }
+function savePositions() {} // Using Supabase DB now
 
 function openAddModal() {
+  if (!currentUser) { alert('Please sign in first!'); return; }
   if (positions.length >= 10) { alert('Maximum 10 positions reached.'); return; }
   document.getElementById('add-modal').classList.add('open');
   document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
@@ -922,6 +1092,7 @@ function closeAddModal() {
 }
 
 async function addPosition() {
+  if (!currentUser) { alert('Please sign in first!'); return; }
   const ticker = document.getElementById('input-ticker').value.trim().toUpperCase();
   const avgPrice = parseFloat(document.getElementById('input-price').value);
   const shares = parseFloat(document.getElementById('input-shares').value);
@@ -944,17 +1115,20 @@ async function addPosition() {
     if (match) { const d = JSON.parse(match[0]); name = d.name||ticker; sector = d.sector||'Unknown'; currentPrice = d.price||avgPrice; }
   } catch(e) {}
 
-  positions.push({ ticker, name, sector, avgPrice, shares, date: date||new Date().toISOString().split('T')[0], notes, currentPrice, signal:'pending', lastUpdated: new Date().toISOString() });
-  savePositions();
+  const pos = { ticker, name, sector, avgPrice, shares, date: date||new Date().toISOString().split('T')[0], notes, currentPrice, signal:'pending', signalReason:'', lastUpdated: new Date().toISOString() };
+  positions.push(pos);
+  await savePositionToDB(pos);
   closeAddModal();
   renderDashboard();
   btn.disabled = false; btn.textContent = 'Add Position →';
 }
 
-function removePosition(ticker) {
+async function removePosition(ticker) {
   if (!confirm('Remove ' + ticker + ' from your portfolio?')) return;
+  const pos = positions.find(p => p.ticker === ticker);
+  if (pos?.id) await deletePositionFromDB(pos.id);
   positions = positions.filter(p => p.ticker !== ticker);
-  savePositions(); renderDashboard();
+  renderDashboard();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1025,7 +1199,7 @@ function updateSummary() {
 async function getSignal(ticker) {
   const pos = positions.find(p=>p.ticker===ticker);
   if (!pos) return;
-  pos.signal = 'pending'; savePositions(); renderDashboard();
+  pos.signal = 'pending'; renderDashboard();
   try {
     const text = await callClaude(
       `Analyze ${ticker} (${pos.name}). My position: ${pos.shares} shares at avg $${pos.avgPrice}, current ~$${pos.currentPrice}. Return ONLY JSON: {"signal":"BUY/HOLD/WAIT/SELL","reason":"one sentence"}`,
@@ -1035,7 +1209,8 @@ async function getSignal(ticker) {
     if (match) { const d = JSON.parse(match[0]); pos.signal = (d.signal||'hold').toLowerCase(); pos.signalReason = d.reason||''; }
   } catch(e) { pos.signal = 'hold'; }
   pos.lastUpdated = new Date().toISOString();
-  savePositions(); renderDashboard();
+  await updatePositionInDB(pos);
+  renderDashboard();
 }
 
 // ═══════════════════════════════════════════════════════
